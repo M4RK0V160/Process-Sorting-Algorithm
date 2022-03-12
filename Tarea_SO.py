@@ -1,17 +1,4 @@
-# TO DO LIST:
-#  quitar historial                         ongoing
-#  arreglar algoritmos(SJF da problemas)    ongoing
-#  memoria                                  ongoing
-#  code review                              -
-#  final version.                           -
-#
-#
-#
-#
-#
-#
-#
-#
+
 from cgitb import text
 from json.encoder import INFINITY
 from random import randint
@@ -20,11 +7,13 @@ import sys
 
 from art import *
 
+
+# installation of necesary python libraries
+
 def install(package):
     subprocess.call([sys.executable, "-m", "pip", "install", package])
     
 install('art==5.4')
-
 #CONSTANT DECLARATION =========================================
 MAIN = True
 OUTPUT = [0,-1,[]]
@@ -32,21 +21,25 @@ PSPARAMS = []
 FULLOUTPUT = []
 
 #AUXILIARY FUNCTIONS:
+
 def isempty(list):
     if len(list) == 0:
         return True
     return False
-
-
 
 def find(elem, list):
     for i,e in enumerate(list):
         if e == elem:
             return i
 
+def findMaxti(ps_list):
+    max = 0
+    for i in ps_list:
+        if i.ti > max:
+            max = i.ti
+    return max
 
-
-def createPs(count, min_t, max_t, min_ti_interval, max_ti_interval):
+def createPs(count, min_t, max_t, min_ti_interval, max_ti_interval): #Auxiliary Function to generate Processes from a set of parameters
     output = []
     last_ti = 0
     for i in range(count):
@@ -55,8 +48,7 @@ def createPs(count, min_t, max_t, min_ti_interval, max_ti_interval):
 
     return output
 
-
-def setParams(history,n):
+def setParams(history,n):  # Auxiliary Functions to extract the generation parameters from a given entry in the Execution History
 
     last_ps = history[n]
     if not isempty(last_ps.params):
@@ -68,33 +60,8 @@ def setParams(history,n):
 
         return [ps_count, min_t, max_t, min_ti_interval, max_ti_interval]
 
-    
-    
-def OriginInput():
-    print()
-    print("|1|: Run Algorithm")
-    print("|2|: History")
-    print("|3|: Rerun Last ")
-    print("|4|: Exit")
-    b = True
-    return check_input(input(),["1","2","3","4"],"porfavor seleccione una opcion valida")
 
-
-def check_input(a, list, error):
-    b = True
-    while b == True:
-        if a in list:
-            b = False
-            return a
-           
-        else:
-            print("ERROR:")
-            print(error)
-            a = input()
-
-
-#FORMATTER TO CREATE THE TABLE DISPLAYING PROCESS ID, DURATION AND START TIME
-def tableFormatter(ps_list):
+def tableFormatter(ps_list): #Formatter for the the first table, displaying Process ID, Process Duration and Process Start Time
     print()
 
     line = "|ID |t |ti|"
@@ -122,8 +89,32 @@ def tableFormatter(ps_list):
     print()
 
 
-#INPUT FUNCTION TO CREATE THE LIST OF PROCESSES
-def takeSpecificInputs():
+#INPUT FUNCTIONS ==========================================================================
+
+def check_input(a, list, error): #Error Handling
+    b = True
+    while b == True:
+        if a in list:
+            b = False
+            return a
+           
+        else:
+            print("ERROR:")
+            print(error)
+            a = input()
+
+def OriginInput(): # Main menu Input gathering Function
+    print()
+    print("|1|: Run Algorithm")
+    print("|2|: History")
+    print("|3|: Rerun Last ")
+    print("|4|: Exit")
+    b = True
+    return check_input(input(),["1","2","3","4"],"porfavor seleccione una opcion valida")
+
+
+
+def takeSpecificInputs(): #Input gathering of Specific Process Parameters
     print("Numero de procesos:")
     ps_list = []
     ps_count = check_input(input(),[str(i) for i in range(1,15)],"el numero de procesos debe estar entre 1 y 15")
@@ -140,7 +131,7 @@ def takeSpecificInputs():
     return ps_list
 
 
-def takeInputs():
+def takeInputs():   #Input gathering of Generated Process Parameters
     art = text2art("RUN   ALGORITHM")
     print(art)
     print("Numero de procesos:")
@@ -159,9 +150,7 @@ def takeInputs():
     return  [ps_count, min_t, max_t, min_ti_interval, max_ti_interval]
 
 
-
-#INPUT FUNCTION TO SELECT THE ALGORITHM AND DECLARE IT
-def select_algorithm(ps_list):
+def select_algorithm(ps_list): #input gathering for algorithm selection
 
     art = text2art("SELECT   AN   ALGORITHM")
 
@@ -179,11 +168,15 @@ def select_algorithm(ps_list):
         return(FCFS(ps_list))
     if alg == "3":
         return SJF(ps_list)
-    
-    
 
+def input_mode():
+    print("select input mode:")
+    print("1: Specific")
+    print("2: generated")
+    return check_input(input(),["1","2"], "porfavor introduce una opcion valida")
 #CLASS DEFINITION=================================
-class bcolors:
+
+class bcolors:          #necesary for coloured output
     PINK = '\033[95m'
     BLUE = '\033[94m'
     CYAN = '\033[96m'
@@ -194,7 +187,7 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-class SJF:
+class SJF:              #SHORTER JOB FIRST ALGORITHM
     def __init__(self, ps_list):
         self.ps_list = ps_list
         self.active_p = None
@@ -202,13 +195,13 @@ class SJF:
         self.t = -1
 
     def run(self):
-        #START UP PROCESS ON THEIR TI AND SET THEM AS ACTIVE AS SOON AS THEY ARRIVE
-        for i, ps in enumerate(self.ps_list):
+        
+        for i, ps in enumerate(self.ps_list): #iterate through the ps list, and append the active processes to the pending list
             if ps.ti-1 == self.t:
                 self.pending_p.append(ps)
 
-        #CHECK FOR NEW PROCESS
-        if self.active_p == None:
+        
+        if self.active_p == None: # check for empty active process, if true find shorter pending process and activate
             if not isempty(self.pending_p):
                 min_t = 10000
                 min_ps_index = 0
@@ -221,8 +214,8 @@ class SJF:
                 del self.pending_p[min_ps_index]
 
     
-        #STEP ACTIVE PROCESS
-        if self.active_p != None:
+     
+        if self.active_p != None:  # step the active process, check if done and activate shorter pending process 
             if(self.active_p.step() == False):
                     self.active_p = None
                     if not isempty(self.pending_p):
@@ -244,7 +237,7 @@ class SJF:
         OUTPUT[1] = self.active_p
         OUTPUT[2] = self.pending_p
 
-class FCFS:
+class FCFS:         #FIRST COME FIRST SERVED ALGORITHM
     def __init__(self, ps_list):
         self.ps_list = ps_list
         self.active_p = None
@@ -252,20 +245,20 @@ class FCFS:
         self.t = -1
 
     def run(self):
-        #START UP PROCESS ON THEIR TI
-        for i, ps in enumerate(self.ps_list):
+        
+        for i, ps in enumerate(self.ps_list):   #iterate through the ps list, and append the active processes to the pending list
             if ps.ti-1 == self.t:
                 self.pending_p.append(ps)
 
-        #CHECK FOR NEW PROCESS
-        if self.active_p == None:
+        
+        if self.active_p == None:   # check for empty active process, if true activate next pending process
             if not isempty(self.pending_p):
                 self.active_p = self.pending_p[0]
                 del self.pending_p[0]
     
-        #CHECK QUANTUM 
+         
         else:
-            if(self.active_p.step() == False):
+            if(self.active_p.step() == False): #step the active process, check if done and activate next pending process
                     self.active_p = None
                     if not isempty(self.pending_p):
                         self.active_p = self.pending_p[0]
@@ -280,7 +273,9 @@ class FCFS:
         OUTPUT[1] = self.active_p
         OUTPUT[2] = self.pending_p    
 
-class RoundRobin:
+
+
+class RoundRobin:   #ROUND ROBIN ALGORITHM
     def __init__(self, ps_list, q):
         self.ps_list = ps_list
         self.q = q
@@ -290,21 +285,20 @@ class RoundRobin:
         self.rq = q
 
     def run(self):
-        #START UP PROCESS ON THEIR TI
-        for i, ps in enumerate(self.ps_list):
+        
+        for i, ps in enumerate(self.ps_list):   #iterate through the ps list, and append the active processes to the pending list
             if ps.ti-1 == self.t:
                 self.pending_p.append(ps)
 
-        #CHECK FOR NEW PROCESS
-        if self.active_p == None:
+        
+        if self.active_p == None:   # check for empty active process, if true activate next pending process
             if not isempty(self.pending_p):
                 self.active_p = self.pending_p[0]
                 del self.pending_p[0]
     
-        #CHECK QUANTUM 
         if self.active_p != None:
 
-            if self.rq == 0:
+            if self.rq == 0:            #check if quantum has run out, if so, stop active process apeend it to the pending list, and start the next pending process
                 if not isempty(self.pending_p):
                     if self.active_p.t != 0:
                         self.pending_p.append(self.active_p)     
@@ -312,7 +306,7 @@ class RoundRobin:
                     del self.pending_p[0]
                     self.rq = self.q
 
-            if(self.active_p.step() == False):
+            if(self.active_p.step() == False):  #step the active process, check if done and activate next pending process, and reset quantum
                     self.active_p = None
                     if not isempty(self.pending_p):
                         self.active_p = self.pending_p[0]
@@ -329,27 +323,36 @@ class RoundRobin:
         OUTPUT[0] = self.t
         OUTPUT[1] = self.active_p
         OUTPUT[2] = self.pending_p    
-#FORMATTER TO CREATE THE OUTPUT TABLE DISPLAYING ACTIVE AND PENDING PROCESSES IN A VISUAL MANNER
-class OutputFormatter:
 
-    def __init__(self, ps_list):
+
+class OutputFormatter:  #FORMATTER TO DISPLAY EACH LINE OF THE OUTPUT TABLE
+
+    def __init__(self, ps_list):            
         self.ps_list = ps_list
         self.ID_list = [ps.id for ps in ps_list]
         self.ID_list_line = "|"
         self.pending_ID_list = []
+
+        #definition strings representing table cells for active, inactive and pending status.
         
         self.active   = f"{bcolors.PINK}XXXXX{bcolors.ENDC}"
         self.inactive = "_____"
         self.pending  = f"{bcolors.YELLOW}/////{bcolors.ENDC}"
         self.line = "|"
-        
-    def change_ps_list(self, ps_list):
-        self.ps_list = ps_list
 
-    def run(self):
-        if not isempty(OUTPUT[2]):
+
+    def run(self):   
+
+        #OUTPUT[0] == algorithm.t
+        #OUTPUT[1] == algorithm.active_p
+        #OUTPUT[2] == algorithm.pending_p
+        
+                
+        if not isempty(OUTPUT[2]):                          #fill the list of pending Processes
             self.pending_ID_list = [ps.id for ps in OUTPUT[2]]
-        if OUTPUT[0] == 0:
+
+
+        if OUTPUT[0] == 0:                                  #if the time is 0, write the first line of the table displaying PS IDs and field descriptions
             block = ""
             for i in self.ID_list:
                 block = ""
@@ -368,7 +371,8 @@ class OutputFormatter:
             self.ID_list_line += "Pending PS"
             print(self.ID_list_line)
         self.line = "|"
-        for id in self.ID_list:
+
+        for id in self.ID_list:                            #iterate through the process list, determine process status and add the corresponding text block to the output string
             if OUTPUT[1] != None and OUTPUT[1] != -1:
                 if id == OUTPUT[1].id:
                     self.line += self.active
@@ -380,10 +384,12 @@ class OutputFormatter:
                 self.line += self.inactive
             self.line += "|"
         self.line += str(OUTPUT[0])
-        if len(str(OUTPUT[0])) == 1:
+
+        if len(str(OUTPUT[0])) == 1:        
             self.line += " |"
         else:
             self.line += "|"
+
         ids = [str(ps.id) for ps in OUTPUT[2]]
         ts = [str(ps.t) for ps in OUTPUT[2]]
         idstr = ""
@@ -394,9 +400,14 @@ class OutputFormatter:
             idstr += ","
         self.line += " "
         self.line += idstr
-        print(self.line)
-        FULLOUTPUT.append([self.line])
-#PROCESS CLASS, THIS IS WHERE WE WOULD IMPLEMENT WHATEVER WE WANT THE DIFFERENT PROCESSES TO DO
+
+
+        print(self.line)                    #print the final string representing the next line of the table
+        FULLOUTPUT.append([self.line])      #save the line into the FULLOUTPUT constant
+
+
+#PROCESS CLASS
+
 class Process:
     def __init__(self, t, ti, id):
         self.t = t
@@ -416,6 +427,7 @@ class Process:
 class Main:
     def __init__(self):
 
+        #STATES:
         # 0: Origin
         # 1: run
         # 2: history
@@ -429,10 +441,12 @@ class Main:
     art = text2art("Welcome   to   PSorter_SO")
     print (art)
     
-    def display_history(self): 
+
+    def display_history(self):   #MAIN LOOP FOR THE HISTORY MENU
 
         art = text2art("HISTORY")
         print(art)
+
 
         for i,Input in enumerate(self.History):
             ps_data_list = ""
@@ -441,51 +455,46 @@ class Main:
             tis = [x.ti for x in Input.ps_list]
 
             for e in range(len(Input.ps_list)):
-
                 data_block = "{}(T:{}, TI:{}) ".format(ids[e],ts[e],tis[e])
                 ps_data_list += data_block
-
-            
-            
+                      
             line = "|{}|PS List: {} ".format(i,ps_data_list)
-
             print(line)
+
+
         print("")
         print("indique el indice de de la entrada que desea ejecutar o -1 para salir")
-
         n = check_input(input(),[str(x) for x in range(-1,len(self.History))],"Porfavor indique una entrada existente")
+
 
         if n != "-1":
             self.state = "1"
             self.execute_algorithm(True, int(n))
-            
-
-            
+     
         self.state = "0"
 
-    def execute_algorithm(self, rerun,n):
+
+
+    def execute_algorithm(self, rerun,n): #MAIN LOOP FOR THE ALGORITHM EXECUTION MENU
         inputmode = "0"
 
         if rerun == True:
-            print(self.History[n].params)
             if not isempty(self.History[n].params):
                 PSPARAMS = setParams(self.History, n)
             ps_list = self.History[n].ps_list
             inputmode = self.History[n].inputmode
        
         else:
-            print("select input mode:")
-            print("1: Specific")
-            print("2: generated")
-            inputmode = check_input(input(),["1","2"], "porfavor introduce una opcion valida")
+            inputmode = input_mode()
+            
 
             if inputmode == "1":
                 ps_list = takeSpecificInputs()
             else:
                 PSPARAMS = takeInputs()
                 ps_list = createPs(int(PSPARAMS[0]),int(PSPARAMS[1]),int(PSPARAMS[2]), int(PSPARAMS[3]),int( PSPARAMS[4]))
+
         self.save_ps_list = [Process(ps.t, ps.ti,ps.id) for ps in ps_list]
-        print((x.t,x.ti) for x in ps_list)
         algorithm = select_algorithm(ps_list)
         OUTPUTFORMATTER = OutputFormatter(ps_list)
         tableFormatter(ps_list)
@@ -508,7 +517,7 @@ class Main:
 
         self.state = "0"
 
-    def run(self):
+    def run(self):          #MAIN PROGRAM LOOP
         while self.state == "0":
             self.state = OriginInput()
 
@@ -521,39 +530,24 @@ class Main:
 
             if self.state == "3":
                 self.state =  "1"
-                print("//EXEC-BOUND//before execute rerun==================================================================")
                 self.execute_algorithm(True, -1)
-                print("//EXEC-BOUND//after execute rerun==================================================================")
 
-class Input_log:
+
+class Input_log:    #EXECUTION HISTORY ENTRY CLASS
     def __init__(self, OUTPUT, PS_list, params, inputmode):
         self.OUTPUT  = OUTPUT
         self.ps_list = PS_list
         self.params = params
         self.inputmode = inputmode
 
-#VARIABLE DECLARATION ============================================
-
-
-
-
-
-def findMaxti(ps_list):
-    max = 0
-    for i in ps_list:
-        if i.ti > max:
-            max = i.ti
-    return max
 
 MAIN = Main()
-#MAIN LOOP ======================================================
-
-
-
 
 MAIN.run()
     
     
    
 
+
+#   Marco Ferrero Garcia (gitHub: M4RK0V160)
         
