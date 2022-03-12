@@ -1,3 +1,4 @@
+#Real time simulation of 3 CPU planning algorithms
 
 from cgitb import text
 from json.encoder import INFINITY
@@ -478,37 +479,36 @@ class Main:
     def execute_algorithm(self, rerun,n): #MAIN LOOP FOR THE ALGORITHM EXECUTION MENU
         inputmode = "0"
 
-        if rerun == True:
+        if rerun == True:                           #check for rerun, if true copy ps_list and inputmode and bypass input gathering
             if not isempty(self.History[n].params):
                 PSPARAMS = setParams(self.History, n)
             ps_list = self.History[n].ps_list
             inputmode = self.History[n].inputmode
        
-        else:
+        else:                                      #input gathering for the upcoming execution
             inputmode = input_mode()
-            
 
             if inputmode == "1":
-                ps_list = takeSpecificInputs()
+                ps_list = takeSpecificInputs()  
             else:
                 PSPARAMS = takeInputs()
                 ps_list = createPs(int(PSPARAMS[0]),int(PSPARAMS[1]),int(PSPARAMS[2]), int(PSPARAMS[3]),int( PSPARAMS[4]))
 
-        self.save_ps_list = [Process(ps.t, ps.ti,ps.id) for ps in ps_list]
-        algorithm = select_algorithm(ps_list)
-        OUTPUTFORMATTER = OutputFormatter(ps_list)
-        tableFormatter(ps_list)
+        self.save_ps_list = [Process(ps.t, ps.ti,ps.id) for ps in ps_list]  #backup of process list for execution history
+        algorithm = select_algorithm(ps_list)                               #declare selected algorithm
+        OUTPUTFORMATTER = OutputFormatter(ps_list)                          #declare outputformatter for the algorithm
+        tableFormatter(ps_list)                                             #display first table
 
-        while self.state == "1":
+        while self.state == "1":                                            #execute algorithm and output formatter until end conditions are met
             algorithm.run()
             OUTPUTFORMATTER.run()
             if algorithm.t > findMaxti(ps_list) and isempty(algorithm.pending_p) and algorithm.active_p == None:
                 self.state  = 0
 
-        if rerun == True:
+        if rerun == True:                                                               #check for rerun, if true bypass execution History update and reset ps_list in the execution history
             self.History[n].ps_list = self.save_ps_list
 
-        if rerun == False:
+        if rerun == False:                                                              #execution history update
             if inputmode != "1":
                 self.History.append(Input_log(FULLOUTPUT, self.save_ps_list ,PSPARAMS, inputmode))
             else:
@@ -518,7 +518,7 @@ class Main:
         self.state = "0"
 
     def run(self):          #MAIN PROGRAM LOOP
-        while self.state == "0":
+        while self.state == "0":            #main state machine for the program
             self.state = OriginInput()
 
             if self.state == "1":
