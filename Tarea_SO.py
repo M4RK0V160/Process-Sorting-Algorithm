@@ -464,13 +464,14 @@ class Main:
         self.state = "0"
 
     def execute_algorithm(self, rerun,n):
+        inputmode = "0"
 
         if rerun == True:
+            print(self.History[n].params)
             if not isempty(self.History[n].params):
                 PSPARAMS = setParams(self.History, n)
-                ps_list = self.History[n].ps_list
-            else:
-                ps_list = self.History[n].ps_list
+            ps_list = self.History[n].ps_list
+            inputmode = self.History[n].inputmode
        
         else:
             print("select input mode:")
@@ -483,7 +484,8 @@ class Main:
             else:
                 PSPARAMS = takeInputs()
                 ps_list = createPs(int(PSPARAMS[0]),int(PSPARAMS[1]),int(PSPARAMS[2]), int(PSPARAMS[3]),int( PSPARAMS[4]))
-            self.save_ps_list = [Process(ps.t, ps.ti,ps.id) for ps in ps_list]
+        self.save_ps_list = [Process(ps.t, ps.ti,ps.id) for ps in ps_list]
+        print((x.t,x.ti) for x in ps_list)
         algorithm = select_algorithm(ps_list)
         OUTPUTFORMATTER = OutputFormatter(ps_list)
         tableFormatter(ps_list)
@@ -493,11 +495,15 @@ class Main:
             OUTPUTFORMATTER.run()
             if algorithm.t > findMaxti(ps_list) and isempty(algorithm.pending_p) and algorithm.active_p == None:
                 self.state  = 0
+
+        if rerun == True:
+            self.History[n].ps_list = self.save_ps_list
+
         if rerun == False:
             if inputmode != "1":
-                self.History.append(Input_log(FULLOUTPUT, self.save_ps_list ,PSPARAMS))
-            else:  
-                self.History.append(Input_log(FULLOUTPUT, self.save_ps_list ,[]))
+                self.History.append(Input_log(FULLOUTPUT, self.save_ps_list ,PSPARAMS, inputmode))
+            else:
+                self.History.append(Input_log(FULLOUTPUT, self.save_ps_list ,[], inputmode))
 
 
         self.state = "0"
@@ -515,13 +521,16 @@ class Main:
 
             if self.state == "3":
                 self.state =  "1"
+                print("//EXEC-BOUND//before execute rerun==================================================================")
                 self.execute_algorithm(True, -1)
+                print("//EXEC-BOUND//after execute rerun==================================================================")
 
 class Input_log:
-    def __init__(self, OUTPUT, PS_list, params):
+    def __init__(self, OUTPUT, PS_list, params, inputmode):
         self.OUTPUT  = OUTPUT
         self.ps_list = PS_list
         self.params = params
+        self.inputmode = inputmode
 
 #VARIABLE DECLARATION ============================================
 
