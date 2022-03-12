@@ -1,9 +1,9 @@
 # TO DO LIST:
-#  debug/user mode(input como usuario, opcion de debugmode)
-#  arreglar algoritmos
-#  memoria
-#  code review
-#  final version.
+#  quitar historial                         ongoing
+#  arreglar algoritmos(SJF da problemas)    ongoing
+#  memoria                                  ongoing
+#  code review                              -
+#  final version.                           -
 #
 #
 #
@@ -12,13 +12,6 @@
 #
 #
 #
-
-
-
-
-
-
-
 from cgitb import text
 from json.encoder import INFINITY
 from random import randint
@@ -64,6 +57,7 @@ def createPs(count, min_t, max_t, min_ti_interval, max_ti_interval):
 
 
 def setParams(history,n):
+
     last_ps = history[n]
     if not isempty(last_ps.params):
         ps_count = last_ps.params[0]
@@ -71,9 +65,11 @@ def setParams(history,n):
         max_t = last_ps.params[2]
         min_ti_interval = last_ps.params[3]
         max_ti_interval = last_ps.params[4]
-    
-    return  [ps_count, min_t, max_t, min_ti_interval, max_ti_interval]
 
+        return [ps_count, min_t, max_t, min_ti_interval, max_ti_interval]
+
+    
+    
 def OriginInput():
     print()
     print("|1|: Run Algorithm")
@@ -180,7 +176,7 @@ def select_algorithm(ps_list):
         q = input()
         return RoundRobin(ps_list,int(q))
     if alg == "2":
-        return(RoundRobin(ps_list, 100000000000))
+        return(FCFS(ps_list))
     if alg == "3":
         return SJF(ps_list)
     
@@ -247,6 +243,42 @@ class SJF:
         OUTPUT[0] = self.t
         OUTPUT[1] = self.active_p
         OUTPUT[2] = self.pending_p
+
+class FCFS:
+    def __init__(self, ps_list):
+        self.ps_list = ps_list
+        self.active_p = None
+        self.pending_p = []
+        self.t = -1
+
+    def run(self):
+        #START UP PROCESS ON THEIR TI
+        for i, ps in enumerate(self.ps_list):
+            if ps.ti-1 == self.t:
+                self.pending_p.append(ps)
+
+        #CHECK FOR NEW PROCESS
+        if self.active_p == None:
+            if not isempty(self.pending_p):
+                self.active_p = self.pending_p[0]
+                del self.pending_p[0]
+    
+        #CHECK QUANTUM 
+        else:
+            if(self.active_p.step() == False):
+                    self.active_p = None
+                    if not isempty(self.pending_p):
+                        self.active_p = self.pending_p[0]
+                        del self.pending_p[0]
+                        self.active_p.step()
+
+            
+        self.t  += 1
+
+        #VOLCADO A CONSTANTE OUTPUT
+        OUTPUT[0] = self.t
+        OUTPUT[1] = self.active_p
+        OUTPUT[2] = self.pending_p    
 
 class RoundRobin:
     def __init__(self, ps_list, q):
@@ -401,8 +433,8 @@ class Main:
 
         art = text2art("HISTORY")
         print(art)
-        for i,Input in enumerate(self.History):
 
+        for i,Input in enumerate(self.History):
             ps_data_list = ""
             ids = [x.id for x in Input.ps_list]
             ts = [x.t for x in Input.ps_list]
@@ -418,13 +450,14 @@ class Main:
             line = "|{}|PS List: {} ".format(i,ps_data_list)
 
             print(line)
-            print("")
-            print("type the index of the entry you want to run, or -1 to exit history")
-            n = input()
+        print("")
+        print("indique el indice de de la entrada que desea ejecutar o -1 para salir")
 
-            if n != "-1":
-                self.state = "1"
-                self.execute_algorithm(True, int(n))
+        n = check_input(input(),[str(x) for x in range(-1,len(self.History))],"Porfavor indique una entrada existente")
+
+        if n != "-1":
+            self.state = "1"
+            self.execute_algorithm(True, int(n))
             
 
             
@@ -433,8 +466,11 @@ class Main:
     def execute_algorithm(self, rerun,n):
 
         if rerun == True:
-            PSPARAMS = setParams(self.History, n)
-            ps_list = self.History[-1].ps_list
+            if not isempty(self.History[n].params):
+                PSPARAMS = setParams(self.History, n)
+                ps_list = self.History[n].ps_list
+            else:
+                ps_list = self.History[n].ps_list
        
         else:
             print("select input mode:")
@@ -482,7 +518,7 @@ class Main:
                 self.execute_algorithm(True, -1)
 
 class Input_log:
-    def __init__(self, OUTPUT, PS_list,params):
+    def __init__(self, OUTPUT, PS_list, params):
         self.OUTPUT  = OUTPUT
         self.ps_list = PS_list
         self.params = params
