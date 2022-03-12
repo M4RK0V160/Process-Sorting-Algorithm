@@ -89,6 +89,32 @@ def tableFormatter(ps_list): #Formatter for the the first table, displaying Proc
         print(line)   
     print()
 
+def calculate_max_penalty(ps_list):
+    ID_Tresp_list = [[x.id,x.t,x.t] for x in ps_list]
+    for pendinglist in FULLOUTPUT: 
+        for id in pendinglist:
+            for i in ID_Tresp_list:
+                
+                if id == i[0]:
+                    
+                    i[1] += 1
+    Penalty_list = [[x[0],x[1]/x[2]] for x in ID_Tresp_list]
+    max_penalty = 0
+    output_ID = ""
+    for i in Penalty_list:
+        if i[1] > max_penalty:
+            output_ID = i[0]
+            max_penalty = i[1]
+    return output_ID
+
+
+
+
+            
+
+
+
+
 
 #INPUT FUNCTIONS ==========================================================================
 
@@ -403,8 +429,9 @@ class OutputFormatter:  #FORMATTER TO DISPLAY EACH LINE OF THE OUTPUT TABLE
         self.line += idstr
 
 
-        print(self.line)                    #print the final string representing the next line of the table
-        FULLOUTPUT.append([self.line])      #save the line into the FULLOUTPUT constant
+        print(self.line) 
+                                                       #print the final string representing the next line of the table
+        FULLOUTPUT.append(self.pending_ID_list)      #save the line into the FULLOUTPUT constant
 
 
 #PROCESS CLASS
@@ -503,17 +530,18 @@ class Main:
             algorithm.run()
             OUTPUTFORMATTER.run()
             if algorithm.t > findMaxti(ps_list) and isempty(algorithm.pending_p) and algorithm.active_p == None:
-                self.state  = 0
+                self.state  = "0"
+
 
         if rerun == True:                                                               #check for rerun, if true bypass execution History update and reset ps_list in the execution history
             self.History[n].ps_list = self.save_ps_list
 
+        print(f"el proceso mas penalizado ha sido: {calculate_max_penalty(self.save_ps_list)}")
         if rerun == False:                                                              #execution history update
             if inputmode != "1":
                 self.History.append(Input_log(FULLOUTPUT, self.save_ps_list ,PSPARAMS, inputmode))
             else:
                 self.History.append(Input_log(FULLOUTPUT, self.save_ps_list ,[], inputmode))
-
 
         self.state = "0"
 
